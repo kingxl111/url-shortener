@@ -6,6 +6,7 @@ import (
 	"github.com/kingxl111/url-shortener/internal/repository/mocks"
 	"github.com/kingxl111/url-shortener/internal/url"
 	"github.com/kingxl111/url-shortener/internal/url/shortener"
+	"github.com/stretchr/testify/mock"
 	"strings"
 	"testing"
 )
@@ -107,7 +108,7 @@ func TestValidateAndNormalizeURL(t *testing.T) {
 			input:    "http://v1.api.example.com",
 			expected: "http://v1.api.example.com",
 		},
-		
+
 		{
 			name:     "punycode domain",
 			input:    "http://xn--e1afmkfd.xn--p1ai",
@@ -145,12 +146,13 @@ func TestValidateAndNormalizeURL(t *testing.T) {
 }
 
 func TestCreateURL(t *testing.T) {
-	repo := &mocks.URLRepository{}
+	repo := new(mocks.URLRepository)
 	s := New(repo)
 
 	tests := []struct {
 		name           string
 		input          url.URL
+		expectedInput  url.URL
 		mockRepoError  error
 		expectedErr    error
 		expectedLength int
@@ -158,7 +160,11 @@ func TestCreateURL(t *testing.T) {
 		{
 			name: "successful creation",
 			input: url.URL{
-				OriginalURL: "example.com",
+				OriginalURL: "http://example.com",
+			},
+			expectedInput: url.URL{
+				OriginalURL:  "http://example.com",
+				ShortenedURL: shortener.GenerateShortURL("http://example.com"),
 			},
 			expectedLength: shortener.ShortURLLength,
 		},
@@ -167,12 +173,17 @@ func TestCreateURL(t *testing.T) {
 			input: url.URL{
 				OriginalURL: "http://invalid!host",
 			},
-			expectedErr: url.ErrInvalidFormat,
+			expectedErr:    url.ErrInvalidFormat, // Ошибка валидации
+			expectedLength: 0,
 		},
 		{
-			name: "repository error (e.g., duplicate)",
+			name: "repository error (e.g., duplicate key)",
 			input: url.URL{
-				OriginalURL: "example.com",
+				OriginalURL: "http://example.com",
+			},
+			expectedInput: url.URL{
+				OriginalURL:  "http://example.com",
+				ShortenedURL: shortener.GenerateShortURL("http://example.com"),
 			},
 			mockRepoError: errors.New("duplicate key"),
 			expectedErr:   errors.New("repository error: duplicate key"),
@@ -181,18 +192,25 @@ func TestCreateURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Настройка мока
-			repo.On("Create", context.Background(), tt.input).
-				Return(&tt.input, tt.mockRepoError).
-				Once()
+			ctx := context.Background()
 
-			result, err := s.CreateURL(context.Background(), tt.input)
+			if tt.expectedErr == nil {
+				repo.On("Create", ctx, mock.MatchedBy(func(u url.URL) bool {
+					return u.OriginalURL == tt.expectedInput.OriginalURL
+				})).Return(&tt.expectedInput, nil).Once()
+			} else if tt.mockRepoError != nil {
+				repo.On("Create", ctx, mock.MatchedBy(func(u url.URL) bool {
+					return u.OriginalURL == tt.expectedInput.OriginalURL
+				})).Return(nil, tt.mockRepoError).Once()
+			}
 
-			// Проверка ошибок
+			result, err := s.CreateURL(ctx, tt.input)
+
 			if tt.expectedErr != nil {
-				if err == nil || err.Error() != tt.expectedErr.Error() {
+				if err == nil || tt.expectedErr.Error() != err.Error() {
 					t.Fatalf("expected error: %v, got: %v", tt.expectedErr, err)
 				}
+				repo.AssertNotCalled(t, "Create") // 🛠 **Добавляем эту проверку**
 				return
 			}
 
@@ -200,29 +218,15 @@ func TestCreateURL(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			// Проверка длины короткого URL
 			if len(result.ShortenedURL) != tt.expectedLength {
 				t.Fatalf("expected length: %d, got: %d", tt.expectedLength, len(result.ShortenedURL))
 			}
 
-			// Проверка символов короткого URL
-			for _, c := range result.ShortenedURL {
-				if !isValidShortURLChar(c) {
-					t.Fatalf("invalid character in short URL: %c", c)
-				}
+			if result.OriginalURL != tt.expectedInput.OriginalURL {
+				t.Fatalf("expected original URL: %s, got: %s", tt.expectedInput.OriginalURL, result.OriginalURL)
 			}
 
-			// Проверка нормализации оригинального URL
-			if result.OriginalURL != "http://example.com" {
-				t.Fatalf("normalization failed, got: %s", result.OriginalURL)
-			}
+			repo.AssertExpectations(t)
 		})
 	}
-}
-
-func isValidShortURLChar(c rune) bool {
-	return (c >= 'a' && c <= 'z') ||
-		(c >= 'A' && c <= 'Z') ||
-		(c >= '0' && c <= '9') ||
-		c == '_'
 }

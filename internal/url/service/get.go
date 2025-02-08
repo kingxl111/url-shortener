@@ -3,23 +3,23 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/kingxl111/url-shortener/internal/repository"
-	"github.com/kingxl111/url-shortener/internal/url"
+
+	urlPack "github.com/kingxl111/url-shortener/internal/url"
 	"github.com/kingxl111/url-shortener/internal/url/shortener"
 )
 
-func (s *service) GetURL(ctx context.Context, shortenedURL url.URL) (*url.URL, error) {
+func (s *service) GetURL(ctx context.Context, shortenedURL urlPack.URL) (*urlPack.URL, error) {
 	if shortenedURL.ShortenedURL == "" {
-		return nil, fmt.Errorf("shortened URL is empty")
+		return nil, urlPack.ErrEmptyURL
 	}
 
 	if len(shortenedURL.ShortenedURL) != shortener.ShortURLLength {
-		return nil, url.ErrInvalidLength
+		return nil, urlPack.ErrInvalidLength
 	}
 
-	if !isValidShortURL(shortenedURL.ShortenedURL) {
-		return nil, url.ErrInvalidCharacters
+	if !IsValidShortURL(shortenedURL.ShortenedURL) {
+		return nil, urlPack.ErrInvalidCharacters
 	}
 
 	result, err := s.urlRepository.Get(ctx, shortenedURL)
@@ -27,13 +27,13 @@ func (s *service) GetURL(ctx context.Context, shortenedURL url.URL) (*url.URL, e
 		if errors.Is(err, repository.ErrorNotFound) {
 			return nil, repository.ErrorNotFound
 		}
-		return nil, url.ErrRepository
+		return nil, urlPack.ErrRepository
 	}
 
 	return result, nil
 }
 
-func isValidShortURL(s string) bool {
+func IsValidShortURL(s string) bool {
 	for _, c := range s {
 		if !isAllowedShortURLChar(c) {
 			return false

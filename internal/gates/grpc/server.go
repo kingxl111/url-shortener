@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	urlPck "github.com/kingxl111/url-shortener/internal/url"
-	"log"
-
 	shrt "github.com/kingxl111/url-shortener/pkg/shortener"
 )
 
@@ -18,7 +16,6 @@ func (s *Server) Create(ctx context.Context, req *shrt.Create_Request) (*shrt.Cr
 	url := urlPck.URL{OriginalURL: req.OriginalUrl}
 	shortenedURL, err := s.Services.CreateURL(ctx, url)
 	if err != nil {
-		log.Printf("error in create: %v", err)
 		return nil, fmt.Errorf("create shortened url: %w", err)
 	}
 
@@ -28,14 +25,13 @@ func (s *Server) Create(ctx context.Context, req *shrt.Create_Request) (*shrt.Cr
 }
 
 func (s *Server) Get(ctx context.Context, req *shrt.Get_Request) (*shrt.Get_Response, error) {
-	url := urlPck.URL{ShortenedURL: req.GetOriginalUrl()}
+	url := urlPck.URL{ShortenedURL: req.ShortUrl}
 	originalURL, err := s.Services.GetURL(ctx, url)
 	if err != nil {
-		log.Printf("error in getting url: %v", err)
 		return nil, fmt.Errorf("get original url: %w", err)
 	}
 
 	return &shrt.Get_Response{
-		ShortUrl: originalURL.OriginalURL,
+		OriginalUrl: originalURL.OriginalURL,
 	}, nil
 }

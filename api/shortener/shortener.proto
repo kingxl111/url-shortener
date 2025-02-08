@@ -20,9 +20,9 @@ message Create {
 
 message Get {
   message Request {
-    string original_url = 1;
+    string short_url = 1;
   }
   message Response {
-    string short_url = 1;
+    string original_url = 1;
   }
 }

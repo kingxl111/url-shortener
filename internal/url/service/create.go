@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/kingxl111/url-shortener/internal/repository"
 	urlPack "github.com/kingxl111/url-shortener/internal/url"
 	"github.com/kingxl111/url-shortener/internal/url/shortener"
 	net "net/url"
@@ -21,6 +23,10 @@ func ValidateAndNormalizeURL(rawURL string) (string, error) {
 
 	parsed, err := net.ParseRequestURI(rawURL)
 	if err != nil {
+		return "", urlPack.ErrInvalidFormat
+	}
+
+	if strings.ContainsAny(parsed.Hostname(), " !{}|\\^\"<>") {
 		return "", urlPack.ErrInvalidFormat
 	}
 
@@ -53,7 +59,10 @@ func (s *service) CreateURL(ctx context.Context, inputURL urlPack.URL) (*urlPack
 	inputURL.ShortenedURL = shortener.GenerateShortURL(inputURL.OriginalURL)
 	shortenedURL, err := s.urlRepository.Create(ctx, inputURL)
 	if err != nil {
-		return nil, fmt.Errorf("repository error: %w", err)
+		if errors.Is(err, repository.ErrorDuplicatedURL) {
+			return nil, fmt.Errorf("url already exists")
+		}
+		return nil, fmt.Errorf("internal server error")
 	}
 
 	return shortenedURL, nil

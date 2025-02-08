@@ -11,4 +11,5 @@ var (
 	ErrInvalidLength     = errors.New("invalid length")
 	ErrRepository        = errors.New("repository error")
 	ErrInvalidScheme     = errors.New("invalid scheme")
+	ErrorDuplicateKey    = errors.New("duplicate key")
 )

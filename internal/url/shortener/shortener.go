@@ -7,11 +7,11 @@ import (
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-const shortURLLength = 10
+const ShortURLLength = 10
 
 func encodeBase62(num uint64) string {
 	var sb strings.Builder
-	for i := 0; i < shortURLLength; i++ {
+	for i := 0; i < ShortURLLength; i++ {
 		sb.WriteByte(charset[num%uint64(len(charset))])
 		num /= uint64(len(charset))
 	}

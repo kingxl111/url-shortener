@@ -5,11 +5,7 @@ import (
 	"fmt"
 	"github.com/kingxl111/url-shortener/internal/url"
 	"sync"
-
-	repos "github.com/kingxl111/url-shortener/internal/repository"
 )
-
-var _ repos.URLRepository = (*MemoryStorage)(nil)
 
 type MemoryStorage struct {
 	mu              sync.RWMutex
@@ -17,7 +13,7 @@ type MemoryStorage struct {
 	originalToShort map[string]string
 }
 
-func NewMemoryStorage() repos.URLRepository {
+func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
 		shortToOriginal: make(map[string]string),
 		originalToShort: make(map[string]string),

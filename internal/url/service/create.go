@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/kingxl111/url-shortener/internal/url"
+	urlPack "github.com/kingxl111/url-shortener/internal/url"
 	"github.com/kingxl111/url-shortener/internal/url/shortener"
 	net "net/url"
 	"strings"
@@ -12,7 +12,7 @@ import (
 func ValidateAndNormalizeURL(rawURL string) (string, error) {
 	rawURL = strings.TrimSpace(rawURL)
 	if rawURL == "" {
-		return "", fmt.Errorf("URL is empty")
+		return "", urlPack.ErrEmptyURL
 	}
 
 	if !strings.Contains(rawURL, "://") {
@@ -21,11 +21,20 @@ func ValidateAndNormalizeURL(rawURL string) (string, error) {
 
 	parsed, err := net.ParseRequestURI(rawURL)
 	if err != nil {
-		return "", fmt.Errorf("invalid URL format: %w", err)
+		return "", urlPack.ErrInvalidFormat
 	}
 
 	if parsed.Host == "" {
-		return "", fmt.Errorf("missing host in URL")
+		return "", urlPack.ErrMissingHost
+	}
+
+	if strings.Contains(parsed.Host, " ") {
+		return "", urlPack.ErrInvalidFormat
+	}
+
+	allowedSchemes := map[string]bool{"http": true, "https": true}
+	if !allowedSchemes[parsed.Scheme] {
+		return "", urlPack.ErrInvalidScheme
 	}
 
 	parsed.Scheme = strings.ToLower(parsed.Scheme)
@@ -34,10 +43,10 @@ func ValidateAndNormalizeURL(rawURL string) (string, error) {
 	return parsed.String(), nil
 }
 
-func (s *service) CreateURL(ctx context.Context, inputURL url.URL) (*url.URL, error) {
+func (s *service) CreateURL(ctx context.Context, inputURL urlPack.URL) (*urlPack.URL, error) {
 	normalized, err := ValidateAndNormalizeURL(inputURL.OriginalURL)
 	if err != nil {
-		return nil, fmt.Errorf("validation failed: %w", err)
+		return nil, err
 	}
 
 	inputURL.OriginalURL = normalized

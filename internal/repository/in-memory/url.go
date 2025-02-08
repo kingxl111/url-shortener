@@ -3,9 +3,9 @@ package in_memory
 import (
 	"context"
 	"fmt"
+	"github.com/kingxl111/url-shortener/internal/url"
 	"sync"
 
-	"github.com/kingxl111/url-shortener/internal/model"
 	repos "github.com/kingxl111/url-shortener/internal/repository"
 )
 
@@ -24,7 +24,7 @@ func NewMemoryStorage() repos.URLRepository {
 	}
 }
 
-func (m *MemoryStorage) Create(ctx context.Context, url model.URL) (model.URL, error) {
+func (m *MemoryStorage) Create(ctx context.Context, url url.URL) (url.URL, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -37,7 +37,7 @@ func (m *MemoryStorage) Create(ctx context.Context, url model.URL) (model.URL, e
 	return url, nil
 }
 
-func (m *MemoryStorage) Get(ctx context.Context, url model.URL) (model.URL, error) {
+func (m *MemoryStorage) Get(ctx context.Context, url url.URL) (url.URL, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 

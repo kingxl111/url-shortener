@@ -1,18 +1,24 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"log"
-	"net"
+	"fmt"
+	urlSrv "github.com/kingxl111/url-shortener/internal/url/service"
+	"golang.org/x/sync/errgroup"
+
+	serv "github.com/kingxl111/url-shortener/internal/gates/grpc"
+
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/kingxl111/url-shortener/internal/config"
-	serv "github.com/kingxl111/url-shortener/internal/handlers"
-	pg "github.com/kingxl111/url-shortener/internal/repository/url/postgres"
-	urlSrv "github.com/kingxl111/url-shortener/internal/service/url"
-
-	"google.golang.org/grpc"
+	pg "github.com/kingxl111/url-shortener/internal/repository/postgres"
 	"google.golang.org/grpc/reflection"
 
+	en "github.com/kingxl111/url-shortener/internal/environment"
 	desc "github.com/kingxl111/url-shortener/pkg/shortener"
 )
 
@@ -23,21 +29,46 @@ func init() {
 }
 
 func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	defaultLogger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	slog.SetDefault(defaultLogger)
+
+	if err := runMain(ctx); err != nil {
+		defaultLogger.Error("run main", slog.Any("err", err))
+		return
+	}
+}
+
+func runMain(ctx context.Context) error {
 	flag.Parse()
+
 	err := config.Load(configPath)
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		return fmt.Errorf("failed to load config: %v", err)
 	}
 
 	grpcConfig, err := config.NewGRPCConfig()
 	if err != nil {
-		log.Fatalf("failed to get grpc config: %v", err)
+		return fmt.Errorf("failed to get grpc config: %v", err)
 	}
 
 	pgConfig, err := config.NewPGConfig()
 	if err != nil {
-		log.Fatalf("failed to get pg config: %v", err)
+		return fmt.Errorf("failed to get pg config: %v", err)
 	}
+
+	loggerConfig, err := config.NewLoggerConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get logger config: %v", err)
+	}
+
+	handleOpts := &slog.HandlerOptions{
+		Level: loggerConfig.Level(),
+	}
+	var h slog.Handler = slog.NewTextHandler(os.Stdout, handleOpts)
+	logger := slog.New(h)
 
 	db, err := pg.NewDB(
 		pgConfig.Username,
@@ -47,25 +78,29 @@ func main() {
 		pgConfig.DBName,
 		pgConfig.SSLMode)
 	if err != nil {
-		log.Fatalf("failed to connect to database: %s", err)
+		return fmt.Errorf("failed to connect to database: %s", err)
 	}
 	defer db.Close()
 
 	repo := pg.NewRepository(db)
 	service := urlSrv.New(repo)
 
-	lis, err := net.Listen("tcp", grpcConfig.Address())
+	var opts en.ServerOptions
+	opts.WithLogger(logger)
+
+	grpcServ, err := opts.NewServer()
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return fmt.Errorf("failed to create grpc server: %v", err)
 	}
 
-	s := grpc.NewServer()
-	reflection.Register(s)
-	desc.RegisterURLShortenerServer(s, &serv.Server{Services: service})
+	reflection.Register(grpcServ)
+	desc.RegisterURLShortenerServer(grpcServ, &serv.Server{Services: service})
 
-	log.Printf("server listening at %v", lis.Addr())
+	eg, gctx := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		logger.Info("grpc starting", slog.String("addr", grpcConfig.Address()))
+		return en.ListenAndServeContext(gctx, grpcConfig.Address(), grpcServ)
+	})
 
-	if err = s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	return eg.Wait()
 }

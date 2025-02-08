@@ -2,11 +2,10 @@ package repository
 
 import (
 	"context"
-
-	"github.com/kingxl111/url-shortener/internal/model"
+	"github.com/kingxl111/url-shortener/internal/url"
 )
 
 type URLRepository interface {
-	Create(ctx context.Context, url model.URL) (model.URL, error)
-	Get(ctx context.Context, shortenedUrl model.URL) (model.URL, error)
+	Create(ctx context.Context, url url.URL) (*url.URL, error)
+	Get(ctx context.Context, shortenedUrl url.URL) (*url.URL, error)
 }

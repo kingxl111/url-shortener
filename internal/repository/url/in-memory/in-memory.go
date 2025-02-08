@@ -3,9 +3,10 @@ package in_memory
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/kingxl111/url-shortener/internal/model"
 	repos "github.com/kingxl111/url-shortener/internal/repository"
-	"sync"
 )
 
 var _ repos.URLRepository = (*MemoryStorage)(nil)

@@ -16,7 +16,7 @@ const (
 	tableName = "urls"
 
 	idColumn           = "id"
-	urlColumn          = "url"
+	urlColumn          = "original_url"
 	shortenedURLColumn = "shortened_url"
 )
 

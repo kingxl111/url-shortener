@@ -7,7 +7,9 @@ import (
 )
 
 //go:generate mockgen -source=repository.go -destination=mocks/mocks.go -package=repository
-type URLRepository interface {
-	Create(ctx context.Context, url url.URL) (*url.URL, error)
-	Get(ctx context.Context, shortenedUrl url.URL) (*url.URL, error)
-}
+type (
+	URLRepository interface {
+		Create(ctx context.Context, url url.URL) (*url.URL, error)
+		Get(ctx context.Context, shortenedUrl url.URL) (*url.URL, error)
+	}
+)

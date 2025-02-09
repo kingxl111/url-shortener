@@ -11,4 +11,8 @@ var (
 	ErrInvalidLength     = errors.New("invalid length")
 	ErrRepository        = errors.New("repository error")
 	ErrInvalidScheme     = errors.New("invalid scheme")
+
+	ErrDuplicatedURL = errors.New("duplicated URL")
+	ErrService       = errors.New("service error")
+	ErrNotFoundURL   = errors.New("url not found")
 )

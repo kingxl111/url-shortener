@@ -25,24 +25,35 @@ func (m *MemoryStorage) Create(ctx context.Context, url url.URL) (*url.URL, erro
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, exist := m.originalToShort[url.OriginalURL]; exist {
-		return nil, repository.ErrorDuplicatedURL
-	}
-	m.shortToOriginal[url.ShortenedURL] = url.OriginalURL
-	m.originalToShort[url.OriginalURL] = url.ShortenedURL
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		if _, exist := m.originalToShort[url.OriginalURL]; exist {
+			return nil, repository.ErrorDuplicatedURL
+		}
+		m.shortToOriginal[url.ShortenedURL] = url.OriginalURL
+		m.originalToShort[url.OriginalURL] = url.ShortenedURL
 
-	return &url, nil
+		return &url, nil
+	}
 }
 
 func (m *MemoryStorage) Get(ctx context.Context, url url.URL) (*url.URL, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	original, exists := m.shortToOriginal[url.ShortenedURL]
-	if !exists {
-		return nil, repository.ErrorNotFound
-	}
-	url.OriginalURL = original
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		original, exists := m.shortToOriginal[url.ShortenedURL]
+		if !exists {
+			return nil, repository.ErrorNotFound
+		}
+		url.OriginalURL = original
 
-	return &url, nil
+		return &url, nil
+	}
+
 }

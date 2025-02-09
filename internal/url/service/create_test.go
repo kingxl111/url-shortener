@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/kingxl111/url-shortener/internal/repository"
 	"github.com/kingxl111/url-shortener/internal/repository/mocks"
 	"github.com/kingxl111/url-shortener/internal/url"
 	"github.com/kingxl111/url-shortener/internal/url/shortener"
@@ -173,20 +174,38 @@ func TestCreateURL(t *testing.T) {
 			input: url.URL{
 				OriginalURL: "http://invalid!host",
 			},
-			expectedErr:    url.ErrInvalidFormat, // Ошибка валидации
+			expectedErr:    url.ErrInvalidFormat,
 			expectedLength: 0,
 		},
 		{
-			name: "repository error (e.g., duplicate key)",
+			name: "duplicate url",
 			input: url.URL{
-				OriginalURL: "http://example.com",
+				OriginalURL: "http://duplicate.com",
 			},
 			expectedInput: url.URL{
-				OriginalURL:  "http://example.com",
-				ShortenedURL: shortener.GenerateShortURL("http://example.com"),
+				OriginalURL:  "http://duplicate.com",
+				ShortenedURL: shortener.GenerateShortURL("http://duplicate.com"),
 			},
-			mockRepoError: errors.New("duplicate key"),
-			expectedErr:   errors.New("repository error: duplicate key"),
+			mockRepoError:  repository.ErrorDuplicatedURL,
+			expectedErr:    errors.New("url already exists"),
+			expectedLength: 0,
+		},
+		{
+			name: "repository failure",
+			input: url.URL{
+				OriginalURL: "http://example.org",
+			},
+			mockRepoError:  errors.New("database error"),
+			expectedErr:    errors.New("internal server error"),
+			expectedLength: 0,
+		},
+		{
+			name: "empty url",
+			input: url.URL{
+				OriginalURL: "",
+			},
+			expectedErr:    url.ErrEmptyURL,
+			expectedLength: 0,
 		},
 	}
 
@@ -200,7 +219,7 @@ func TestCreateURL(t *testing.T) {
 				})).Return(&tt.expectedInput, nil).Once()
 			} else if tt.mockRepoError != nil {
 				repo.On("Create", ctx, mock.MatchedBy(func(u url.URL) bool {
-					return u.OriginalURL == tt.expectedInput.OriginalURL
+					return u.OriginalURL == tt.input.OriginalURL
 				})).Return(nil, tt.mockRepoError).Once()
 			}
 
@@ -210,7 +229,7 @@ func TestCreateURL(t *testing.T) {
 				if err == nil || tt.expectedErr.Error() != err.Error() {
 					t.Fatalf("expected error: %v, got: %v", tt.expectedErr, err)
 				}
-				repo.AssertNotCalled(t, "Create") // 🛠 **Добавляем эту проверку**
+				repo.AssertNotCalled(t, "Create")
 				return
 			}
 

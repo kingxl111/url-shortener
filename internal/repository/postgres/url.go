@@ -8,7 +8,6 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	rep "github.com/kingxl111/url-shortener/internal/repository"
 	ur "github.com/kingxl111/url-shortener/internal/url"
-	"github.com/lib/pq"
 )
 
 const (
@@ -42,12 +41,7 @@ func (r *repository) Create(ctx context.Context, url ur.URL) (*ur.URL, error) {
 	var id int64
 	err = r.db.pool.QueryRow(ctx, query, args...).Scan(&id)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			if pqErr.Code == "23505" { // not unique
-				return nil, rep.ErrorDuplicatedURL
-			}
-		}
-		return nil, fmt.Errorf("executing query error: %w", err)
+		return nil, rep.ErrorDuplicatedURL
 	}
 
 	return &url, nil

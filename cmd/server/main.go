@@ -8,6 +8,7 @@ import (
 	"github.com/kingxl111/url-shortener/internal/repository/factory"
 	urlSrv "github.com/kingxl111/url-shortener/internal/url/service"
 	"golang.org/x/sync/errgroup"
+	"time"
 
 	"log/slog"
 	"os"
@@ -69,19 +70,8 @@ func runMain(ctx context.Context) error {
 	var h slog.Handler = slog.NewTextHandler(os.Stdout, handleOpts)
 	logger := slog.New(h)
 
-	//db, err := pg.NewDB(
-	//	pgConfig.Username,
-	//	pgConfig.Password,
-	//	pgConfig.Host,
-	//	pgConfig.Port,
-	//	pgConfig.DBName,
-	//	pgConfig.SSLMode)
-	//if err != nil {
-	//	return fmt.Errorf("failed to connect to database: %s", err)
-	//}
-	//defer db.Close()
-	//
-	//repo := pg.NewRepository(db)
+	// waiting for db init
+	time.Sleep(time.Second * 3)
 	repo, err := factory.NewURLRepository(
 		pgConfig.Username,
 		pgConfig.Password,

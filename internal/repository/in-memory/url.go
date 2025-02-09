@@ -2,7 +2,7 @@ package in_memory
 
 import (
 	"context"
-	"fmt"
+	"github.com/kingxl111/url-shortener/internal/repository"
 	"github.com/kingxl111/url-shortener/internal/url"
 	"sync"
 )
@@ -25,7 +25,7 @@ func (m *MemoryStorage) Create(ctx context.Context, url url.URL) (*url.URL, erro
 	defer m.mu.Unlock()
 
 	if _, exist := m.originalToShort[url.OriginalURL]; exist {
-		return nil, fmt.Errorf("url already exists: %s", url.OriginalURL)
+		return nil, repository.ErrorDuplicatedURL
 	}
 	m.shortToOriginal[url.ShortenedURL] = url.OriginalURL
 	m.originalToShort[url.OriginalURL] = url.ShortenedURL
@@ -39,7 +39,7 @@ func (m *MemoryStorage) Get(ctx context.Context, url url.URL) (*url.URL, error) 
 
 	original, exists := m.shortToOriginal[url.ShortenedURL]
 	if !exists {
-		return nil, fmt.Errorf("such url does not exist: %s", url.ShortenedURL)
+		return nil, repository.ErrorNotFound
 	}
 	url.OriginalURL = original
 

@@ -20,28 +20,28 @@ func NewMemoryStorage() *MemoryStorage {
 	}
 }
 
-func (m *MemoryStorage) Create(ctx context.Context, url url.URL) (url.URL, error) {
+func (m *MemoryStorage) Create(ctx context.Context, url url.URL) (*url.URL, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if _, exist := m.originalToShort[url.OriginalURL]; exist {
-		return url, fmt.Errorf("url already exists: %s", url.OriginalURL)
+		return nil, fmt.Errorf("url already exists: %s", url.OriginalURL)
 	}
 	m.shortToOriginal[url.ShortenedURL] = url.OriginalURL
 	m.originalToShort[url.OriginalURL] = url.ShortenedURL
 
-	return url, nil
+	return &url, nil
 }
 
-func (m *MemoryStorage) Get(ctx context.Context, url url.URL) (url.URL, error) {
+func (m *MemoryStorage) Get(ctx context.Context, url url.URL) (*url.URL, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
 	original, exists := m.shortToOriginal[url.ShortenedURL]
 	if !exists {
-		return url, fmt.Errorf("such url does not exist: %s", url.ShortenedURL)
+		return nil, fmt.Errorf("such url does not exist: %s", url.ShortenedURL)
 	}
 	url.OriginalURL = original
 
-	return url, nil
+	return &url, nil
 }

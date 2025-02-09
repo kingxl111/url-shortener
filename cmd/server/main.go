@@ -4,10 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	serv "github.com/kingxl111/url-shortener/internal/gates/grpc"
 	urlSrv "github.com/kingxl111/url-shortener/internal/url/service"
 	"golang.org/x/sync/errgroup"
-
-	serv "github.com/kingxl111/url-shortener/internal/gates/grpc"
 
 	"log/slog"
 	"os"

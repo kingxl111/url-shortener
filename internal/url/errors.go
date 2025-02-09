@@ -6,12 +6,7 @@ var (
 	ErrEmptyURL      = errors.New("URL is empty")
 	ErrInvalidFormat = errors.New("invalid URL format")
 	ErrMissingHost   = errors.New("missing host")
-
-	ErrInvalidCharacters = errors.New("invalid characters")
-	ErrInvalidLength     = errors.New("invalid length")
-	ErrRepository        = errors.New("repository error")
-	ErrInvalidScheme     = errors.New("invalid scheme")
-
+	ErrRepository    = errors.New("repository error")
 	ErrDuplicatedURL = errors.New("duplicated URL")
 	ErrService       = errors.New("service error")
 	ErrNotFoundURL   = errors.New("url not found")

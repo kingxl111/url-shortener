@@ -4,8 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"time"
-
 	serv "github.com/kingxl111/url-shortener/internal/gates/grpc"
 	"github.com/kingxl111/url-shortener/internal/repository/factory"
 	urlSrv "github.com/kingxl111/url-shortener/internal/url/service"
@@ -71,15 +69,14 @@ func runMain(ctx context.Context) error {
 	var h slog.Handler = slog.NewTextHandler(os.Stdout, handleOpts)
 	logger := slog.New(h)
 
-	// waiting for db init
-	time.Sleep(time.Second * 3)
 	repo, err := factory.NewURLRepository(
 		pgConfig.Username,
 		pgConfig.Password,
 		pgConfig.Host,
 		pgConfig.Port,
 		pgConfig.DBName,
-		pgConfig.SSLMode)
+		pgConfig.SSLMode,
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create repository: %v", err)
 	}

@@ -2,9 +2,9 @@ package factory
 
 import (
 	"fmt"
+	"github.com/kingxl111/url-shortener/internal/url/service"
 	"os"
 
-	"github.com/kingxl111/url-shortener/internal/repository"
 	m "github.com/kingxl111/url-shortener/internal/repository/in-memory"
 	p "github.com/kingxl111/url-shortener/internal/repository/postgres"
 )
@@ -14,7 +14,7 @@ const (
 	database = "postgres"
 )
 
-func NewURLRepository(username, password, host, port, dbName, sslMode string) (repository.URLRepository, error) {
+func NewURLRepository(username, password, host, port, dbName, sslMode string) (service.URLRepository, error) {
 	storageType := os.Getenv("STORAGE_TYPE")
 
 	switch storageType {

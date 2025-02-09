@@ -66,7 +66,6 @@ func (s *Server) Get(ctx context.Context, req *shrt.Get_Request) (*shrt.Get_Resp
 }
 
 func ValidateURL(rawURL string) error {
-	rawURL = strings.TrimSpace(rawURL)
 	if rawURL == "" {
 		return url.ErrEmptyURL
 	}
@@ -86,11 +85,6 @@ func ValidateURL(rawURL string) error {
 
 	if strings.Contains(parsed.Host, " ") {
 		return url.ErrInvalidFormat
-	}
-
-	allowedSchemes := map[string]bool{"http": true, "https": true}
-	if !allowedSchemes[parsed.Scheme] {
-		return url.ErrInvalidScheme
 	}
 
 	return nil

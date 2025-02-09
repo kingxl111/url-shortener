@@ -23,3 +23,19 @@ func GenerateShortURL(originalURL string) string {
 	num := binary.BigEndian.Uint64(hash[:8])
 	return encodeBase62(num)
 }
+
+func IsValidShortURL(s string) bool {
+	for _, c := range s {
+		if !isAllowedShortURLChar(c) {
+			return false
+		}
+	}
+	return true
+}
+
+func isAllowedShortURLChar(c rune) bool {
+	return (c >= 'a' && c <= 'z') ||
+		(c >= 'A' && c <= 'Z') ||
+		(c >= '0' && c <= '9') ||
+		c == '_'
+}

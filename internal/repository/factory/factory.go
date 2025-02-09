@@ -2,8 +2,9 @@ package factory
 
 import (
 	"fmt"
-	"github.com/kingxl111/url-shortener/internal/url/service"
 	"os"
+
+	"github.com/kingxl111/url-shortener/internal/url/service"
 
 	m "github.com/kingxl111/url-shortener/internal/repository/in-memory"
 	p "github.com/kingxl111/url-shortener/internal/repository/postgres"

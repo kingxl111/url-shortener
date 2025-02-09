@@ -4,5 +4,5 @@ import "errors"
 
 var (
 	ErrorNotFound      = errors.New("url not found")
-	ErrorDuplicatedURL = errors.New("duplicated url")
+	ErrorDuplicatedURL = errors.New("duplicated URL")
 )

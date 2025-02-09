@@ -26,12 +26,12 @@ func NewRepository(db *DB) *repository {
 	return &repository{db: db}
 }
 
-func (r *repository) Create(ctx context.Context, url ur.URL) (*ur.URL, error) {
+func (r *repository) Create(ctx context.Context, inputURL ur.URL) (*ur.URL, error) {
 
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns(urlColumn, shortenedURLColumn).
-		Values(url.OriginalURL, url.ShortenedURL).
+		Values(inputURL.OriginalURL, inputURL.ShortenedURL).
 		Suffix("RETURNING id")
 
 	query, args, err := builder.ToSql()
@@ -45,7 +45,7 @@ func (r *repository) Create(ctx context.Context, url ur.URL) (*ur.URL, error) {
 		return nil, rep.ErrorDuplicatedURL
 	}
 
-	return &url, nil
+	return &inputURL, nil
 }
 
 func (r *repository) Get(ctx context.Context, shortenedUrl ur.URL) (*ur.URL, error) {

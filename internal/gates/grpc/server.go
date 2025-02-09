@@ -3,15 +3,18 @@ package grpc
 import (
 	"context"
 	"errors"
+	net "net/url"
+	"strings"
+
 	"github.com/kingxl111/url-shortener/internal/url/shortener"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	net "net/url"
-	"strings"
 
 	"github.com/kingxl111/url-shortener/internal/url"
 	shrt "github.com/kingxl111/url-shortener/pkg/shortener"
 )
+
+const maxUrlSize = 1024
 
 type Server struct {
 	shrt.UnimplementedURLShortenerServer
@@ -47,7 +50,7 @@ func (s *Server) Get(ctx context.Context, req *shrt.Get_Request) (*shrt.Get_Resp
 		return nil, status.Error(codes.InvalidArgument, "invalid short url length")
 	}
 
-	if !IsValidShortURL(req.ShortUrl) {
+	if !shortener.IsValidShortURL(req.ShortUrl) {
 		return nil, status.Error(codes.InvalidArgument, "invalid short url")
 	}
 
@@ -70,6 +73,10 @@ func ValidateURL(rawURL string) error {
 		return url.ErrEmptyURL
 	}
 
+	if len(rawURL) > maxUrlSize {
+		return url.ErrInvalidFormat
+	}
+
 	parsed, err := net.ParseRequestURI(rawURL)
 	if err != nil {
 		return url.ErrInvalidFormat
@@ -88,20 +95,4 @@ func ValidateURL(rawURL string) error {
 	}
 
 	return nil
-}
-
-func IsValidShortURL(s string) bool {
-	for _, c := range s {
-		if !isAllowedShortURLChar(c) {
-			return false
-		}
-	}
-	return true
-}
-
-func isAllowedShortURLChar(c rune) bool {
-	return (c >= 'a' && c <= 'z') ||
-		(c >= 'A' && c <= 'Z') ||
-		(c >= '0' && c <= '9') ||
-		c == '_'
 }

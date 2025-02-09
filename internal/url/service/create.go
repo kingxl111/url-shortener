@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	net "net/url"
+	"strings"
+
 	"github.com/kingxl111/url-shortener/internal/repository"
 	urlPack "github.com/kingxl111/url-shortener/internal/url"
 	"github.com/kingxl111/url-shortener/internal/url/shortener"
-	net "net/url"
-	"strings"
 )
 
 func ValidateAndNormalizeURL(rawURL string) (string, error) {

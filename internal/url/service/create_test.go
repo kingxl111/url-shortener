@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
+	"testing"
+
 	"github.com/kingxl111/url-shortener/internal/repository"
 	"github.com/kingxl111/url-shortener/internal/repository/mocks"
 	"github.com/kingxl111/url-shortener/internal/url"
 	"github.com/kingxl111/url-shortener/internal/url/shortener"
 	"github.com/stretchr/testify/mock"
-	"strings"
-	"testing"
 )
 
 func TestValidateAndNormalizeURL(t *testing.T) {

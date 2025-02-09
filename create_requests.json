@@ -1,0 +1,4 @@
+[
+  { "original_url": "https://google.com" },
+  { "original_url": "url.without.scheme" }
+]

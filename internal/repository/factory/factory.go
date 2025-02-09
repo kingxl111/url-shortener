@@ -2,10 +2,11 @@ package factory
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/kingxl111/url-shortener/internal/repository"
 	inmemory "github.com/kingxl111/url-shortener/internal/repository/in-memory"
 	postgres "github.com/kingxl111/url-shortener/internal/repository/postgres"
-	"os"
 )
 
 func NewURLRepository(username, password, host, port, dbName, sslMode string) (repository.URLRepository, error) {

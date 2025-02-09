@@ -13,3 +13,12 @@ docker compose --profile postgres up
 ```
 docker compose up
 ```
+
+## Нагрузка
+```
+ghz --insecure --proto=api/shortener/shortener.proto --call=shortener.URLShortener.Create -D create_requests.json -n 2000 -c 20 -r 200 0.0.0.0:50051
+```
+```
+ghz --insecure --proto=api/shortener/shortener.proto --call=shortener.URLShortener.Get -D get_requests.json -n 2000 -c 20 -r 200 0.0.0.0:50051
+```
+

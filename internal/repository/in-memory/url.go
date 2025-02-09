@@ -2,9 +2,10 @@ package in_memory
 
 import (
 	"context"
+	"sync"
+
 	"github.com/kingxl111/url-shortener/internal/repository"
 	"github.com/kingxl111/url-shortener/internal/url"
-	"sync"
 )
 
 type MemoryStorage struct {

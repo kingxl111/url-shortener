@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/kingxl111/url-shortener/internal/repository"
 	"github.com/kingxl111/url-shortener/internal/repository/mocks"
 	"github.com/kingxl111/url-shortener/internal/url"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 func TestGetURL(t *testing.T) {

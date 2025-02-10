@@ -1,6 +1,15 @@
 version: '3.8'
 
 services:
+  app:
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+    env_file:
+      - ".env"
+    ports:
+      - "${GRPC_PORT}:${GRPC_PORT}"
+
   db:
     image: postgres:16.6-alpine3.19
     container_name: shortener-db
